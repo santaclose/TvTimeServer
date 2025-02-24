@@ -25,7 +25,7 @@ if not os.path.exists(VIDEO_FOLDER):
 	os.makedirs(VIDEO_FOLDER)
 VIDEO_FILE_EXTENSIONS = [".mkv", ".webm", ".flv", ".vob", ".ogg", ".ogv", ".drc", ".mng", ".avi", ".mov", ".qt", ".wmv", ".yuv", ".rm", ".rmvb", ".asf", ".amv", ".mp4", ".m4v", ".mp", ".svi", ".3gp", ".flv", ".f4v"]
 VIDEO_PLAYER_PROCESS_NAME = "vlc"
-VIDEO_PLAYER_LAUNCH_COMMAND = [R"C:\Program Files\VideoLAN\VLC\vlc.exe", "--fullscreen", "--sub-autodetect-fuzzy=1"]
+VIDEO_PLAYER_LAUNCH_COMMAND = ["vlc", "--fullscreen", "--sub-autodetect-fuzzy=1"]
 
 YOUTUBE_PLAYER_PROCESS_NAME = "freetube"
 YOUTUBE_PLAYER_LAUNCH_COMMAND = [freetube_handler.get_command()]
@@ -141,7 +141,7 @@ def open_file_thread(filePath):
 	stamp = time.time()
 	os.utime(filePath, (stamp, stamp))
 	print(VIDEO_PLAYER_LAUNCH_COMMAND + [filePath])
-	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [filePath.replace('/', '\\')])
+	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [common.fixPathOS(filePath)])
 # 	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [f"--sub-autodetect-path={os.path.dirname(filePath)}", filePath])
 
 def open_spotify_thread():
