@@ -7,7 +7,6 @@ import json
 import sys
 import os
 import re
-# import pwd
 BASE_PATH = os.path.dirname(__file__)
 
 import birthday_reminder
@@ -17,32 +16,6 @@ import common
 import moreos
 
 app = flask.Flask(__name__)
-
-# def demote(user_uid, user_gid):
-# 	def result():
-# 		report_ids('starting demotion')
-# 		os.setgid(user_gid)
-# 		os.setuid(user_uid)
-# 		report_ids('finished demotion')
-# 	return result
-
-
-# def report_ids(msg):
-# 	print('uid, gid = %d, %d; %s' % (os.getuid(), os.getgid(), msg))
-
-# def get_subprocess_params():
-# 	user_name, cwd = "san", BASE_PATH
-# 	pw_record = pwd.getpwnam(user_name)
-# 	user_name      = pw_record.pw_name
-# 	user_home_dir  = pw_record.pw_dir
-# 	user_uid       = pw_record.pw_uid
-# 	user_gid       = pw_record.pw_gid
-# 	env = os.environ.copy()
-# 	env[ 'HOME'     ]  = user_home_dir
-# 	env[ 'LOGNAME'  ]  = user_name
-# 	env[ 'PWD'      ]  = cwd
-# 	env[ 'USER'     ]  = user_name
-# 	return demote(user_uid, user_gid), cwd, env
 
 BROWSER_PROCESS_NAME = "chrome"
 BROWSER_LAUNCH_COMMAND = ["google-chrome", "--disable-session-crashed-bubble"]
@@ -62,9 +35,6 @@ YOUTUBE_PLAYER_OPEN_WAIT_TIME = 2
 YOUTUBE_PLAYER_WEBSITE_LOAD_WAIT_TIME = 3
 
 CUSTOM_FILE_PATH = f"{BASE_PATH}/custom_commands.json"
-# SPOTIFY_PROCESS_NAME = "spotify"
-# SPOTIFY_LAUNCH_COMMAND = [SPOTIFY_PROCESS_NAME]
-# SPOTIFY_ENVIRONMENT = {"LD_PRELOAD": "/usr/local/lib/spotify-adblock.so"}
 
 BROWSER_OPEN_WAIT_TIME = 5
 BROWSER_WEBSITE_LOAD_WAIT_TIME = 4
@@ -217,12 +187,6 @@ def file_endpoint():
 		output.extend([('f', x, common.fileDaysSinceLastAccess(x)) for x in common.sortedNicely(common.filesInFolder(path)) if common.fileIsVideoFile(x)])
 		return json.dumps(output, indent=INDENT_JSON_RESPONSES)
 
-# @app.route('/spotify/')
-# def spotify_endpoint():
-# 	x = threading.Thread(target=open_spotify_thread)
-# 	x.start()
-# 	return "", 200
-
 
 @app.route('/custom/', methods=['GET', 'POST', 'DELETE'])
 def custom_endpoint():
@@ -352,22 +316,5 @@ def decreasespeed_endpoint():
 		return "", 400
 	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["decreasespeed"])
 	return "", 200
-
-
-
-# @app.route('/mouse_click/')
-# def mouse_click():
-# 	subprocess.run(["xdotool", "click", "1"])
-# 	return "", 200
-
-# @app.route('/mouse_move/')
-# def mouse_move():
-# 	x = flask.request.args.get('x')
-# 	y = flask.request.args.get('y')
-# 	print(f"--- {x} {y}")
-# 	subprocess.run(["xdotool", "mousemove_relative", x, y])
-# # 	mouse.move(int(x), int(y), False)
-# # 	pyautogui.move(int(x), int(y))
-# 	return "", 200
 
 app.run(host='0.0.0.0', port=8081)

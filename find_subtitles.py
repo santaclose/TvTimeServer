@@ -21,7 +21,7 @@ for i in range(len(srtsSorted)):
 # 	print(f"{videoFileNames[videosSorted[i]]} - {srtFileNames[srtsSorted[i]]}")
 	targetVideoFilePath = videoFileNames[videosSorted[i]]
 	targetSrtFilePath = srtFileNames[srtsSorted[i]]
-	
+
 	newFilePath = os.path.splitext(targetVideoFilePath)[0] + os.path.splitext(targetSrtFilePath)[1]
 	print(f"moving {targetSrtFilePath} to {newFilePath}")
 	shutil.move(targetSrtFilePath, newFilePath)
