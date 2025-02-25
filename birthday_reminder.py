@@ -1,15 +1,18 @@
+import os
 import json
 import datetime
 
 import moreos
-# import subprocess
+
+JSON_FILE = "birthdays.json"
 
 birthdays = dict()
-with open("birthdays.json", 'r') as file:
-	jsonObject = json.loads(file.read())
-	for k in jsonObject.keys():
-		day, month = k.split('/')
-		birthdays[(int(day), int(month))] = jsonObject[k]
+if os.path.isfile(JSON_FILE):
+	with open(JSON_FILE, 'r') as file:
+		jsonObject = json.loads(file.read())
+		for k in jsonObject.keys():
+			day, month = k.split('/')
+			birthdays[(int(day), int(month))] = jsonObject[k]
 
 def remind():
 	nowdate = datetime.datetime.now()
