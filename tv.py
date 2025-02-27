@@ -226,6 +226,7 @@ def custom_endpoint():
 @app.route('/customrun/')
 def customrun_endpoint():
 	birthday_reminder.remind()
+	clear()
 	global customCommandSubprocess
 	global currentMode
 	name = flask.request.args.get('name')
