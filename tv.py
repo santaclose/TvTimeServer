@@ -112,6 +112,7 @@ def open_link_thread(link):
 		if moreos.is_process_running(YOUTUBE_PLAYER_PROCESS_NAME): # reuse process if possible
 			inputsym.keyPress("esc")
 			inputsym.keyPress(YOUTUBE_PLAYER_GO_TO_BAR_SHORTCUT)
+			time.sleep(0.1)
 			inputsym.keyPress(["ctrl", "a"])
 			inputsym.keyPress("delete")
 			inputsym.keyWrite(link)
