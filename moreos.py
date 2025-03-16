@@ -4,10 +4,20 @@ import psutil
 import plyer
 import subprocess
 
-def kill_processes_with_name(process_name):
+def get_process_name_set():
+	out = set()
 	for proc in psutil.process_iter():
-		if process_name.lower() in proc.name().lower():
-			proc.kill()
+		out.add(proc.name().lower())
+	return out
+
+def kill_processes_with_name(process_name):
+	try:
+		for proc in psutil.process_iter():
+			if process_name.lower() in proc.name().lower():
+				proc.kill()
+	except Exception as e:
+		return False
+	return True
 
 def is_process_running(process_name):
 	for proc in psutil.process_iter():

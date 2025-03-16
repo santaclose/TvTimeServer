@@ -78,18 +78,25 @@ SHORTCUTS_BY_MODE = {
 		"captions": "alt+r",
 		"increasespeed": "]",
 		"decreasespeed": "[",
+	},
+	"custom": {
+		"pause": "enter",
+		"forward": "right",
+		"rewind": "left",
+		"volumeup": "up",
+		"volumedown": "down",
+		"mute": "esc",
 	}
 }
 
 currentMode = None
-customCommandSubprocess = None
+processSetBeforeCustom = None
 
 def clear():
 	global currentMode
-	# moreos.kill_processes_with_name(BROWSER_PROCESS_NAME)
-	# moreos.kill_processes_with_name(SPOTIFY_PROCESS_NAME)
 	if currentMode == 'custom':
-		customCommandSubprocess.terminate()
+		for x in moreos.get_process_name_set().difference(processSetBeforeCustom):
+			moreos.kill_processes_with_name(x)
 	moreos.kill_processes_with_name(VIDEO_PLAYER_PROCESS_NAME)
 	moreos.kill_processes_with_name(YOUTUBE_PLAYER_PROCESS_NAME)
 	currentMode = None
@@ -228,7 +235,7 @@ def custom_endpoint():
 def customrun_endpoint():
 	birthday_reminder.remind()
 	clear()
-	global customCommandSubprocess
+	global processSetBeforeCustom
 	global currentMode
 	name = flask.request.args.get('name')
 	if not os.path.isfile(CUSTOM_FILE_PATH):
@@ -237,7 +244,7 @@ def customrun_endpoint():
 		jsonObject = json.loads(file.read())
 	if name not in jsonObject.keys():
 		return "", 400
-	customCommandSubprocess = subprocess.Popen(jsonObject[name], cwd=os.path.dirname(jsonObject[name]))
+	processSetBeforeCustom = moreos.get_process_name_set()
 	currentMode = 'custom'
 	return "", 200
 
