@@ -86,6 +86,7 @@ SHORTCUTS_BY_MODE = {
 		"volumeup": "up",
 		"volumedown": "down",
 		"mute": "esc",
+		"increasespeed": "tab",
 	}
 }
 
@@ -166,6 +167,13 @@ def open_spotify_thread():
 @app.route('/')
 def index():
 	return 'tv time', 200
+
+@app.route('/update/')
+def update_endpoint():
+	print(subprocess.check_output(['git', 'pull', 'origin', 'master']))
+	subprocess.Popen([sys.executable, 'tv.py'])
+	moreos.kill_process_with_pid(os.getpid())
+	return "", 200
 
 @app.route('/download/torrent/')
 def download_torrent_endpoint():

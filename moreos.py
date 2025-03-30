@@ -19,6 +19,9 @@ def kill_processes_with_name(process_name):
 		return False
 	return True
 
+def kill_process_with_pid(pid):
+	os.kill(pid, signal.SIGTERM)
+
 def is_process_running(process_name):
 	for proc in psutil.process_iter():
 		if process_name.lower() in proc.name().lower():

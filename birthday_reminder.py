@@ -13,6 +13,7 @@ if os.path.isfile(JSON_FILE):
 		for k in jsonObject.keys():
 			day, month = k.split('/')
 			birthdays[(int(day), int(month))] = jsonObject[k]
+	print("Birthday json loaded")
 
 def remind():
 	nowdate = datetime.datetime.now()
