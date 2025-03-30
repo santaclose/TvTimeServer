@@ -174,6 +174,7 @@ def index():
 @app.route('/update/')
 def update_endpoint():
 	print(subprocess.check_output(['git', 'pull', 'origin', 'master']).decode('utf-8'))
+	print(subprocess.check_output([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt']).decode('utf-8'))
 	subprocess.Popen([sys.executable, 'tv.py'])
 	moreos.kill_process_with_pid(os.getpid())
 	return "", 200
@@ -256,7 +257,11 @@ def customrun_endpoint():
 	if name not in jsonObject.keys():
 		return "", 400
 	processSetBeforeCustom = moreos.get_process_name_set()
-	subprocess.Popen(jsonObject[name], cwd=os.path.dirname(os.path.abspath(jsonObject[name])))
+	process = subprocess.Popen(jsonObject[name], cwd=os.path.dirname(os.path.abspath(jsonObject[name])))
+	if os.name == 'nt':
+		from pywinauto import Application
+		app = Application().connect(process=process.pid)
+		app.top_window().set_focus()
 	currentMode = 'custom'
 	return "", 200
 
