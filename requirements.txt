@@ -6,4 +6,3 @@ streamlink
 libtorrent
 flask
 plyer
-pywinauto

@@ -257,11 +257,7 @@ def customrun_endpoint():
 	if name not in jsonObject.keys():
 		return "", 400
 	processSetBeforeCustom = moreos.get_process_name_set()
-	process = subprocess.Popen(jsonObject[name], cwd=os.path.dirname(os.path.abspath(jsonObject[name])))
-	if os.name == 'nt':
-		from pywinauto import Application
-		app = Application().connect(process=process.pid)
-		app.top_window().set_focus()
+	subprocess.Popen(jsonObject[name], cwd=os.path.dirname(os.path.abspath(jsonObject[name])))
 	currentMode = 'custom'
 	return "", 200
 
