@@ -119,10 +119,13 @@ def open_link_thread(link):
 		currentMode = 'youtube'
 		if moreos.is_process_running(YOUTUBE_PLAYER_PROCESS_NAME): # reuse process if possible
 			inputsym.keyPress("esc")
+			time.sleep(0.1)
 			inputsym.keyPress(YOUTUBE_PLAYER_GO_TO_BAR_SHORTCUT)
 			time.sleep(0.1)
 			inputsym.keyPress(["ctrl", "a"])
+			time.sleep(0.1)
 			inputsym.keyPress("delete")
+			time.sleep(0.1)
 			inputsym.keyWrite(link)
 			inputsym.keyPress("enter")
 			time.sleep(YOUTUBE_PLAYER_WEBSITE_LOAD_WAIT_TIME)
@@ -170,7 +173,7 @@ def index():
 
 @app.route('/update/')
 def update_endpoint():
-	print(subprocess.check_output(['git', 'pull', 'origin', 'master']))
+	print(subprocess.check_output(['git', 'pull', 'origin', 'master']).decode('utf-8'))
 	subprocess.Popen([sys.executable, 'tv.py'])
 	moreos.kill_process_with_pid(os.getpid())
 	return "", 200
