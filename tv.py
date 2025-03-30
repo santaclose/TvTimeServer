@@ -256,6 +256,7 @@ def customrun_endpoint():
 	if name not in jsonObject.keys():
 		return "", 400
 	processSetBeforeCustom = moreos.get_process_name_set()
+	subprocess.Popen(jsonObject[name], cwd=os.path.dirname(os.path.abspath(jsonObject[name])))
 	currentMode = 'custom'
 	return "", 200
 
