@@ -86,6 +86,7 @@ SHORTCUTS_BY_MODE = {
 		"volumeup": "up",
 		"volumedown": "down",
 		"mute": "esc",
+		"captions": "space",
 		"increasespeed": "tab",
 	}
 }
