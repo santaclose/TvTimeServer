@@ -4,6 +4,14 @@ import psutil
 import plyer
 import subprocess
 
+currentDisplayIsExternal = True
+
+def switch_display():
+	global currentDisplayIsExternal
+	if os.name == 'nt':
+		subprocess.run(["DisplaySwitch.exe", "/internal" if currentDisplayIsExternal else "/external"])
+	currentDisplayIsExternal = not currentDisplayIsExternal
+
 def get_process_name_set():
 	out = set()
 	for proc in psutil.process_iter():

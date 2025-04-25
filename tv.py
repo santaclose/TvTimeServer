@@ -180,6 +180,11 @@ def update_endpoint():
 	moreos.kill_process_with_pid(os.getpid())
 	return "", 200
 
+@app.route('/switch_display')
+def switch_display():
+	moreos.switch_display()
+	return "", 200
+
 @app.route('/download/torrent/')
 def download_torrent_endpoint():
 	magnet = flask.request.args.get('magnet')
