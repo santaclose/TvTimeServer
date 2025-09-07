@@ -15,8 +15,9 @@ def get_command():
 		return "freetube"
 
 def update_if_needed():
-	releasesHtml = requests.get("https://github.com/FreeTubeApp/FreeTube/releases").content.decode('utf-8')
-	latestVersion = re.findall(r"Release (v\d+.\d+.\d+(\s+Beta)?)", releasesHtml)[0][0]
+	tagsHtml = requests.get("https://github.com/FreeTubeApp/FreeTube/tags").content.decode('utf-8')
+	latestVersion = re.findall(r'<a.*href="/FreeTubeApp/FreeTube/releases/tag/([^"]+)"', tagsHtml)[0]
+	# latestVersion will be something like: "v0.23.8-beta"
 
 	currentVersion = 'Unknown'
 	if os.path.isfile(f"{BASE_PATH}/freetube_version.txt"):
@@ -30,10 +31,11 @@ def update_if_needed():
 		print(f"Installing freetube version: {latestVersion}")
 	else:
 		print(f"Updating freetube from {currentVersion} to {latestVersion}")
-		shutil.rmtree(f'{BASE_PATH}/freetube')
+		if os.name == 'nt':
+			shutil.rmtree(f'{BASE_PATH}/freetube')
 
-	urlPartA = latestVersion.replace(' ', '-').lower()
-	urlPartB = re.match(r'v(\d+\.\d+\.\d+)(\s+Beta)?', latestVersion).group(1)
+	urlPartA = latestVersion
+	urlPartB = latestVersion[1:].replace('-', '_')
 	if os.name == 'nt':
 		targetUrl = f"https://github.com/FreeTubeApp/FreeTube/releases/download/{urlPartA}/freetube-{urlPartB}-win-{ARCH.replace('amd', 'x')}-portable.zip"
 		subprocess.run(["curl", targetUrl, "--output", f"{BASE_PATH}/freetube.zip", "-L"])
