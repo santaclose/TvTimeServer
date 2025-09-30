@@ -17,9 +17,6 @@ import moreos
 
 app = flask.Flask(__name__)
 
-BROWSER_PROCESS_NAME = "chrome"
-BROWSER_LAUNCH_COMMAND = ["google-chrome", "--disable-session-crashed-bubble"]
-
 VIDEO_FOLDER = f"{BASE_PATH}/downloads"
 if not os.path.exists(VIDEO_FOLDER):
 	os.makedirs(VIDEO_FOLDER)
@@ -27,18 +24,19 @@ VIDEO_FILE_EXTENSIONS = [".mkv", ".webm", ".flv", ".vob", ".ogg", ".ogv", ".drc"
 VIDEO_PLAYER_PROCESS_NAME = "vlc"
 VIDEO_PLAYER_LAUNCH_COMMAND = ["vlc", "--fullscreen", "--sub-autodetect-fuzzy=1"]
 
-YOUTUBE_PLAYER_PROCESS_NAME = "freetube"
-YOUTUBE_PLAYER_LAUNCH_COMMAND = [freetube_handler.get_command()]
-# YOUTUBE_PLAYER_GO_TO_BAR_SHORTCUT = "ctrl+l"
-YOUTUBE_PLAYER_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
-YOUTUBE_PLAYER_OPEN_WAIT_TIME = 2
-YOUTUBE_PLAYER_WEBSITE_LOAD_WAIT_TIME = 3
+YOUTUBE_MODE = "chrome"
+FREETUBE_PROCESS_NAME = "freetube"
+FREETUBE_LAUNCH_COMMAND = [freetube_handler.get_command()]
+FREETUBE_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
+FREETUBE_OPEN_WAIT_TIME = 2
+FREETUBE_WEBSITE_LOAD_WAIT_TIME = 3
+CHROME_PROCESS_NAME = "chrome"
+CHROME_LAUNCH_COMMAND = ["google-chrome", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
+CHROME_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
+CHROME_OPEN_WAIT_TIME = 5
+CHROME_WEBSITE_LOAD_WAIT_TIME = 4
 
 CUSTOM_FILE_PATH = f"{BASE_PATH}/custom_commands.json"
-
-BROWSER_OPEN_WAIT_TIME = 5
-BROWSER_WEBSITE_LOAD_WAIT_TIME = 4
-BROWSER_GO_TO_BAR_SHORTCUT = "ctrl+l"
 
 INDENT_JSON_RESPONSES='\t'
 
@@ -55,7 +53,7 @@ SHORTCUTS_BY_MODE = {
 		"increasespeed": "]",
 		"decreasespeed": "[",
 	},
-	"youtube": {
+	"youtube-freetube": {
 		"pause": "space",
 		"forward": "right",
 		"rewind": "left",
@@ -66,6 +64,18 @@ SHORTCUTS_BY_MODE = {
 		"captions": "c",
 		"increasespeed": "p",
 		"decreasespeed": "o",
+	},
+	"youtube-chrome": {
+		"pause": "space",
+		"forward": "right",
+		"rewind": "left",
+		"volumeup": "up",
+		"volumedown": "down",
+		"fullscreen": "f",
+		"mute": "m",
+		"captions": "c",
+		"increasespeed": ["shift", "."],
+		"decreasespeed": ["shift", ","],
 	},
 	"twitch": {
 		"pause": "space",
@@ -94,14 +104,16 @@ SHORTCUTS_BY_MODE = {
 currentMode = None
 processSetBeforeCustom = None
 
-def clear():
+def clear(clearCurrentMode = True):
 	global currentMode
 	if currentMode == 'custom':
 		for x in moreos.get_process_name_set().difference(processSetBeforeCustom):
 			moreos.kill_processes_with_name(x)
 	moreos.kill_processes_with_name(VIDEO_PLAYER_PROCESS_NAME)
-	moreos.kill_processes_with_name(YOUTUBE_PLAYER_PROCESS_NAME)
-	currentMode = None
+	moreos.kill_processes_with_name(FREETUBE_PROCESS_NAME)
+	moreos.kill_processes_with_name(CHROME_PROCESS_NAME)
+	if clearCurrentMode:
+		currentMode = None
 
 def download_torrent_thread(magnet):
 	os.chdir(VIDEO_FOLDER)
@@ -117,11 +129,25 @@ def open_link_thread(link):
 	global currentMode
 	birthday_reminder.remind()
 	if "youtu" in link:
-		currentMode = 'youtube'
-		if moreos.is_process_running(YOUTUBE_PLAYER_PROCESS_NAME): # reuse process if possible
+		if YOUTUBE_MODE == "freetube":
+			currentMode = 'youtube-freetube'
+			processName = FREETUBE_PROCESS_NAME
+			goToBarShortcut = FREETUBE_GO_TO_BAR_SHORTCUT
+			loadTime = FREETUBE_WEBSITE_LOAD_WAIT_TIME
+			openTime = FREETUBE_OPEN_WAIT_TIME
+			launchCommand = FREETUBE_LAUNCH_COMMAND
+		elif YOUTUBE_MODE == "chrome":
+			currentMode = 'youtube-chrome'
+			processName = CHROME_PROCESS_NAME
+			goToBarShortcut = CHROME_GO_TO_BAR_SHORTCUT
+			loadTime = CHROME_WEBSITE_LOAD_WAIT_TIME
+			openTime = CHROME_OPEN_WAIT_TIME
+			launchCommand = CHROME_LAUNCH_COMMAND
+
+		if moreos.is_process_running(processName): # reuse process if possible
 			inputsym.keyPress("esc")
 			time.sleep(0.1)
-			inputsym.keyPress(YOUTUBE_PLAYER_GO_TO_BAR_SHORTCUT)
+			inputsym.keyPress(goToBarShortcut)
 			time.sleep(0.1)
 			inputsym.keyPress(["ctrl", "a"])
 			time.sleep(0.1)
@@ -129,16 +155,16 @@ def open_link_thread(link):
 			time.sleep(0.1)
 			inputsym.keyWrite(link)
 			inputsym.keyPress("enter")
-			time.sleep(YOUTUBE_PLAYER_WEBSITE_LOAD_WAIT_TIME)
-			inputsym.keyPress(SHORTCUTS_BY_MODE['youtube']["fullscreen"])
+			time.sleep(loadTime)
+			inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
 		else:
-			clear()
-			currentMode = 'youtube'
+			clear(False)
 			freetube_handler.update_if_needed()
-			process = subprocess.Popen(YOUTUBE_PLAYER_LAUNCH_COMMAND + [link])
-			time.sleep(YOUTUBE_PLAYER_OPEN_WAIT_TIME + YOUTUBE_PLAYER_WEBSITE_LOAD_WAIT_TIME)
-			inputsym.keyPress(SHORTCUTS_BY_MODE['youtube']["fullscreen"])
+			process = subprocess.Popen(launchCommand + [link])
+			time.sleep(openTime + loadTime)
+			inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
 			# open_link_thread(link)
+
 	elif "twitch" in link:
 		clear()
 		currentMode = 'vlc'
@@ -174,8 +200,14 @@ def index():
 
 @app.route('/update/')
 def update_endpoint():
-	print(subprocess.check_output(['git', 'pull', 'origin', 'master']).decode('utf-8'))
-	print(subprocess.check_output([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt']).decode('utf-8'))
+	try:
+		print(subprocess.check_output(['git', 'pull', 'origin', 'master']).decode('utf-8'))
+	except Exception as error:
+		print("git pull command failed")
+	try:
+		print(subprocess.check_output([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt']).decode('utf-8'))
+	except Exception as error:
+		print("pip install command failed")
 	subprocess.Popen([sys.executable, 'tv.py'])
 	moreos.kill_process_with_pid(os.getpid())
 	return "", 200
