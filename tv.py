@@ -161,7 +161,7 @@ def open_link_thread(link):
 			if YOUTUBE_MODE == "youtube-freetube":
 				freetube_handler.update_if_needed()
 			clear(False)
-			process = subprocess.Popen(launchCommand + [link])
+			process = subprocess.Popen(launchCommand + [link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			time.sleep(openTime + loadTime)
 			inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
 			# open_link_thread(link)
@@ -169,7 +169,7 @@ def open_link_thread(link):
 	elif "twitch" in link:
 		clear()
 		currentMode = 'vlc'
-		subprocess.run([sys.executable,  "-m", "streamlink", "--twitch-low-latency", link, "720p,480p,best", "--player-args", "--fullscreen"])
+		subprocess.run([sys.executable,  "-m", "streamlink", "--twitch-low-latency", link, "720p,480p,best", "--player-args", "--fullscreen"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def open_file_thread(filePath):
 	print(f"opening path {filePath}")
@@ -181,7 +181,7 @@ def open_file_thread(filePath):
 	stamp = time.time()
 	os.utime(filePath, (stamp, stamp))
 	print(VIDEO_PLAYER_LAUNCH_COMMAND + [filePath])
-	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [common.fixPathOS(filePath)])
+	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [common.fixPathOS(filePath)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 # 	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [f"--sub-autodetect-path={os.path.dirname(filePath)}", filePath])
 
 def open_spotify_thread():
