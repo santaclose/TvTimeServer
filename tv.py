@@ -381,4 +381,6 @@ def decreasespeed_endpoint():
 # app.run(host='0.0.0.0', port=8081)
 if __name__ == "__main__":
 	from waitress import serve
+	import socket
+	print(f"serving at: {socket.gethostbyname(socket.gethostname())}")
 	serve(app, host='0.0.0.0', port=8081)
