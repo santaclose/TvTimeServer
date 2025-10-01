@@ -377,4 +377,7 @@ def decreasespeed_endpoint():
 	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["decreasespeed"])
 	return "", 200
 
-app.run(host='0.0.0.0', port=8081)
+# app.run(host='0.0.0.0', port=8081)
+if __name__ == "__main__":
+	from waitress import serve
+	serve(app, host='0.0.0.0', port=8081)
