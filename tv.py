@@ -24,7 +24,7 @@ VIDEO_FILE_EXTENSIONS = [".mkv", ".webm", ".flv", ".vob", ".ogg", ".ogv", ".drc"
 VIDEO_PLAYER_PROCESS_NAME = "vlc"
 VIDEO_PLAYER_LAUNCH_COMMAND = ["vlc", "--fullscreen", "--sub-autodetect-fuzzy=1"]
 
-YOUTUBE_MODE = "chrome"
+YOUTUBE_MODE = "freetube"
 FREETUBE_PROCESS_NAME = "freetube"
 FREETUBE_LAUNCH_COMMAND = [freetube_handler.get_command()]
 FREETUBE_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
@@ -158,7 +158,7 @@ def open_link_thread(link):
 			time.sleep(loadTime)
 			inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
 		else:
-			if YOUTUBE_MODE == "youtube-freetube":
+			if YOUTUBE_MODE == "freetube":
 				freetube_handler.update_if_needed()
 			clear(False)
 			process = subprocess.Popen(launchCommand + [link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
