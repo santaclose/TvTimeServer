@@ -9,6 +9,7 @@ import os
 import re
 BASE_PATH = os.path.dirname(__file__)
 
+import investments
 import birthday_reminder
 import freetube_handler
 import inputsym
@@ -305,6 +306,8 @@ def clear_endpoint():
 	if currentMode is None:
 		return "", 400
 	clear()
+	x = threading.Thread(target=investments.query)
+	x.start()
 	return "", 200
 
 
