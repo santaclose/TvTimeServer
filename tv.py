@@ -29,8 +29,8 @@ YOUTUBE_MODE = "freetube"
 FREETUBE_PROCESS_NAME = "freetube"
 FREETUBE_LAUNCH_COMMAND = [freetube_handler.get_command()]
 FREETUBE_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
-FREETUBE_OPEN_WAIT_TIME = 2
-FREETUBE_WEBSITE_LOAD_WAIT_TIME = 3
+FREETUBE_OPEN_WAIT_TIME = 5
+FREETUBE_WEBSITE_LOAD_WAIT_TIME = 11
 CHROME_PROCESS_NAME = "chrome"
 CHROME_LAUNCH_COMMAND = ["google-chrome", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
 CHROME_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
