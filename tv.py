@@ -157,14 +157,16 @@ def open_link_thread(link):
 			inputsym.keyWrite(link)
 			inputsym.keyPress("enter")
 			time.sleep(loadTime)
-			inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
+			if currentMode is not None: # it's possible that the user closed it already
+				inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
 		else:
 			if YOUTUBE_MODE == "freetube":
 				freetube_handler.update_if_needed()
 			clear(False)
 			process = subprocess.Popen(launchCommand + [link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 			time.sleep(openTime + loadTime)
-			inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
+			if currentMode is not None: # it's possible that the user closed it already
+				inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
 			# open_link_thread(link)
 
 	elif "twitch" in link:
