@@ -15,16 +15,19 @@ def query():
 		return
 	lastQueryTime = currentTime
 	obj = get_investments_object()
-	url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,nano,cardano,dogecoin&vs_currencies=usd"
-	data = requests.get(url).json()
+	currencySet = set()
+	for x in obj:
+		currencySet.add(x['currency'])
+	coinRequestUrl = f"https://api.coingecko.com/api/v3/simple/price?ids={','.join(currencySet)}&vs_currencies=usd"
+	coinRequestResponse = requests.get(coinRequestUrl).json()
 	print("----PRICES-----")
-	for k in data.keys():
-		print(f"{k}: {data[k]['usd']:.5f} USD")
+	for k in coinRequestResponse.keys():
+		print(f"{k}: {coinRequestResponse[k]['usd']:.5f} USD")
 	print("----INVESTMENTS----")
 	totalGains = 0
 	for investment in obj:
 		convertedValue = investment['valueUSD'] / investment['price']
-		currentPrice = data[investment['currency']]['usd']
+		currentPrice = coinRequestResponse[investment['currency']]['usd']
 		currentValueUSD = currentPrice * convertedValue
 		currentGain = currentValueUSD - investment['valueUSD']
 		totalGains += currentGain
