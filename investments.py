@@ -1,20 +1,29 @@
+import os
 import json
 import requests
 import datetime
 
 lastQueryTime = None
 
+JSON_FILE_NAME = "investments.json"
+
 def get_investments_object():
-	with open("investments.json", 'r') as file:
+	if not os.path.exists(JSON_FILE_NAME):
+		return None
+	with open(JSON_FILE_NAME, 'r') as file:
 		return json.loads(file.read())
 
 def query():
 	global lastQueryTime
+
+	obj = get_investments_object()
+	if obj is None:
+		return
+
 	currentTime = datetime.datetime.now()
 	if lastQueryTime is not None and (currentTime - lastQueryTime) < datetime.timedelta(minutes=10):
 		return
 	lastQueryTime = currentTime
-	obj = get_investments_object()
 	currencySet = set()
 	for x in obj:
 		currencySet.add(x['currency'])
