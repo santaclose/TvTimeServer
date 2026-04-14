@@ -25,17 +25,22 @@ VIDEO_FILE_EXTENSIONS = [".mkv", ".webm", ".flv", ".vob", ".ogg", ".ogv", ".drc"
 VIDEO_PLAYER_PROCESS_NAME = "vlc"
 VIDEO_PLAYER_LAUNCH_COMMAND = ["vlc", "--fullscreen", "--sub-autodetect-fuzzy=1"]
 
-YOUTUBE_MODE = "freetube"
+YOUTUBE_MODE = "firefox"
 FREETUBE_PROCESS_NAME = "freetube"
 FREETUBE_LAUNCH_COMMAND = [freetube_handler.get_command()]
 FREETUBE_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
 FREETUBE_OPEN_WAIT_TIME = 5
 FREETUBE_WEBSITE_LOAD_WAIT_TIME = 11
 CHROME_PROCESS_NAME = "chrome"
-CHROME_LAUNCH_COMMAND = ["google-chrome", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
+CHROME_LAUNCH_COMMAND = ["google-chrome-stable", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
 CHROME_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
 CHROME_OPEN_WAIT_TIME = 5
 CHROME_WEBSITE_LOAD_WAIT_TIME = 4
+FIREFOX_PROCESS_NAME = "firefox"
+FIREFOX_LAUNCH_COMMAND = ["firefox"]
+FIREFOX_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
+FIREFOX_OPEN_WAIT_TIME = 5
+FIREFOX_WEBSITE_LOAD_WAIT_TIME = 4
 
 CUSTOM_FILE_PATH = f"{BASE_PATH}/custom_commands.json"
 
@@ -51,8 +56,8 @@ SHORTCUTS_BY_MODE = {
 		"fullscreen": "f",
 		"mute": "m",
 		"captions": "v",
-		"increasespeed": "]",
-		"decreasespeed": "[",
+		"increasespeed": "bracketright",
+		"decreasespeed": "bracketleft",
 	},
 	"youtube-freetube": {
 		"pause": "space",
@@ -67,7 +72,7 @@ SHORTCUTS_BY_MODE = {
 		"decreasespeed": "o",
 	},
 	"youtube-chrome": {
-		"pause": "space",
+		"pause": "k",
 		"forward": "right",
 		"rewind": "left",
 		"volumeup": "up",
@@ -75,8 +80,20 @@ SHORTCUTS_BY_MODE = {
 		"fullscreen": "f",
 		"mute": "m",
 		"captions": "c",
-		"increasespeed": ["shift", "."],
-		"decreasespeed": ["shift", ","],
+		"increasespeed": ["shift", "period"],
+		"decreasespeed": ["shift", "comma"]
+	},
+	"youtube-firefox": {
+		"pause": "k",
+		"forward": "right",
+		"rewind": "left",
+		"volumeup": "up",
+		"volumedown": "down",
+		"fullscreen": "f",
+		"mute": "m",
+		"captions": "c",
+		"increasespeed": ["shift", "period"],
+		"decreasespeed": ["shift", "comma"]
 	},
 	"twitch": {
 		"pause": "space",
@@ -113,6 +130,7 @@ def clear(clearCurrentMode = True):
 	moreos.kill_processes_with_name(VIDEO_PLAYER_PROCESS_NAME)
 	moreos.kill_processes_with_name(FREETUBE_PROCESS_NAME)
 	moreos.kill_processes_with_name(CHROME_PROCESS_NAME)
+	moreos.kill_processes_with_name(FIREFOX_PROCESS_NAME)
 	if clearCurrentMode:
 		currentMode = None
 
@@ -144,9 +162,16 @@ def open_link_thread(link):
 			loadTime = CHROME_WEBSITE_LOAD_WAIT_TIME
 			openTime = CHROME_OPEN_WAIT_TIME
 			launchCommand = CHROME_LAUNCH_COMMAND
+		elif YOUTUBE_MODE == "firefox":
+			currentMode = 'youtube-firefox'
+			processName = FIREFOX_PROCESS_NAME
+			goToBarShortcut = FIREFOX_GO_TO_BAR_SHORTCUT
+			loadTime = FIREFOX_WEBSITE_LOAD_WAIT_TIME
+			openTime = FIREFOX_OPEN_WAIT_TIME
+			launchCommand = FIREFOX_LAUNCH_COMMAND
 
 		if moreos.is_process_running(processName): # reuse process if possible
-			inputsym.keyPress("esc")
+			inputsym.keyPress("escape")
 			time.sleep(0.1)
 			inputsym.keyPress(goToBarShortcut)
 			time.sleep(0.1)
@@ -155,7 +180,7 @@ def open_link_thread(link):
 			inputsym.keyPress("delete")
 			time.sleep(0.15)
 			inputsym.keyWrite(link)
-			inputsym.keyPress("enter")
+			inputsym.keyPress("return")
 			time.sleep(loadTime)
 			if currentMode is not None: # it's possible that the user closed it already
 				inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
