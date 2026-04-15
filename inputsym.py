@@ -11,7 +11,13 @@ def keyPress(key):
 		subprocess.run(command, stdout=subprocess.DEVNULL)
 
 def keyWrite(text):
-	subprocess.run(["wtype", text])
+	temp = getClipText()
+	setClipText(text)
+	time.sleep(0.1)
+	command = ["hyprctl", "dispatch", "sendshortcut", "ctrl,", "v,", "activewindow"]
+	subprocess.run(command, stdout=subprocess.DEVNULL)
+	time.sleep(0.1)
+	setClipText(temp)
 
 def setClipText(text):
 	pyperclip.copy(text)
