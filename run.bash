@@ -1,0 +1,1 @@
+uv run --python 3.11.1 tv.py

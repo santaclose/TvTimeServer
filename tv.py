@@ -12,7 +12,10 @@ BASE_PATH = os.path.dirname(__file__)
 import investments
 import birthday_reminder
 import freetube_handler
-import inputsym
+if os.name == "nt":
+	import inputsym_win as inputsym
+else:
+	import inputsym
 import common
 import moreos
 
@@ -25,14 +28,20 @@ VIDEO_FILE_EXTENSIONS = [".mkv", ".webm", ".flv", ".vob", ".ogg", ".ogv", ".drc"
 VIDEO_PLAYER_PROCESS_NAME = "vlc"
 VIDEO_PLAYER_LAUNCH_COMMAND = ["vlc", "--fullscreen", "--sub-autodetect-fuzzy=1"]
 
-YOUTUBE_MODE = "firefox"
+if os.name == "nt":
+	YOUTUBE_MODE = "chrome"
+else:
+	YOUTUBE_MODE = "firefox"
 FREETUBE_PROCESS_NAME = "freetube"
 FREETUBE_LAUNCH_COMMAND = [freetube_handler.get_command()]
 FREETUBE_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
 FREETUBE_OPEN_WAIT_TIME = 5
 FREETUBE_WEBSITE_LOAD_WAIT_TIME = 11
 CHROME_PROCESS_NAME = "chrome"
-CHROME_LAUNCH_COMMAND = ["google-chrome-stable", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
+if os.name == "nt":
+	CHROME_LAUNCH_COMMAND = ["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
+else:
+	CHROME_LAUNCH_COMMAND = ["google-chrome-stable", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
 CHROME_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
 CHROME_OPEN_WAIT_TIME = 5
 CHROME_WEBSITE_LOAD_WAIT_TIME = 4
@@ -324,7 +333,7 @@ def customrun_endpoint():
 	if name not in jsonObject.keys():
 		return "", 400
 	processSetBeforeCustom = moreos.get_process_name_set()
-	subprocess.Popen(jsonObject[name], cwd=os.path.dirname(os.path.abspath(jsonObject[name])))
+	subprocess.Popen(jsonObject[name], shell=True)
 	currentMode = 'custom'
 	return "", 200
 
