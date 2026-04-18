@@ -7,10 +7,19 @@ import subprocess
 currentDisplayIsExternal = True
 
 def switch_display():
-	global currentDisplayIsExternal
 	if os.name == 'nt':
+		global currentDisplayIsExternal
 		subprocess.run(["DisplaySwitch.exe", "/internal" if currentDisplayIsExternal else "/external"])
-	currentDisplayIsExternal = not currentDisplayIsExternal
+		currentDisplayIsExternal = not currentDisplayIsExternal
+	else:
+		selectedMonitor = subprocess.check_output("hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name'", shell=True).decode('utf-8').strip()
+		allMonitors = subprocess.check_output("hyprctl monitors all -j | jq -r '.[] | .name'", shell=True).decode('utf-8').strip().split('\n')
+		for i in range(len(allMonitors)):
+			monitor = allMonitors[i]
+			if selectedMonitor == monitor:
+				nextMonitorIndex = (i + 1) % len(allMonitors)
+				subprocess.run(f"hyprctl keyword monitor {monitor},disable", shell=True)
+				subprocess.run(f"hyprctl keyword monitor {allMonitors[nextMonitorIndex]},enable", shell=True)
 
 def kill_process_with_pid(pid):
 	os.kill(pid, signal.SIGTERM)

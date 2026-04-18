@@ -1,5 +1,5 @@
 sudo pacman -Sy
-sudo pacman -S zenity python-uv vlc vlc-plugins-all firefox
+sudo pacman -S zenity python-uv vlc vlc-plugins-all firefox jq
 
 uv venv --python 3.11.1
 source .venv/bin/activate

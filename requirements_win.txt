@@ -1,0 +1,9 @@
+requests
+pyautogui
+pynput
+psutil
+streamlink
+libtorrent
+flask
+plyer
+waitress
