@@ -15,6 +15,13 @@ def switch_display():
 def kill_process_with_pid(pid):
 	os.kill(pid, signal.SIGTERM)
 
+def kill_process_group(pid):
+	children = psutil.Process(pid).children(recursive=True)
+	for child in children:
+		child.kill()
+	os.kill(pid, signal.SIGTERM)
+	return len(children)
+
 def is_process_running(process_name):
 	for proc in psutil.process_iter():
 		if process_name.lower() in proc.name().lower():

@@ -136,7 +136,7 @@ def clear(clearCurrentMode = True):
 	global createdProcesses
 
 	for p in createdProcesses:
-		p.kill()
+		moreos.kill_process_group(p.pid)
 	createdProcesses = []
 	if clearCurrentMode:
 		currentMode = None
