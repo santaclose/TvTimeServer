@@ -244,14 +244,24 @@ def index():
 @app.route('/update/')
 def update_endpoint():
 	try:
-		print(subprocess.check_output(['git', 'pull', 'origin', 'master']).decode('utf-8'))
+		command = ['git', 'pull', 'origin', 'master']
+		print(f"running: {' '.join(command)}")
+		print(subprocess.check_output(command).decode('utf-8'))
 	except Exception as error:
 		print("git pull command failed")
 	try:
-		print(subprocess.check_output([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt']).decode('utf-8'))
+		if os.name == "nt":
+			command = [sys.executable, '-m', 'pip', 'install', '-r', 'requirements_win.txt']
+		else:
+			command = ["uv", "pip", "install", "-r", "requirements.txt", "--python", "3.11.1"]
+		print(f"running: {' '.join(command)}")
+		print(subprocess.check_output(command).decode('utf-8'))
 	except Exception as error:
 		print("pip install command failed")
-	subprocess.Popen([sys.executable, 'tv.py'])
+	if os.name == "nt":
+		subprocess.Popen([sys.executable, 'tv.py'])
+	else:
+		subprocess.Popen(["bash", "run.bash"])
 	moreos.kill_process_with_pid(os.getpid())
 	return "", 200
 
