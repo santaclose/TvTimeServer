@@ -106,15 +106,15 @@ SHORTCUTS_BY_MODE = {
 	},
 	"twitch": {
 		"pause": "space",
-		"forward": "Right",
-		"rewind": "Left",
-		"volumeup": "Up",
-		"volumedown": "Down",
+		"forward": "right",
+		"rewind": "left",
+		"volumeup": "up",
+		"volumedown": "down",
 		"fullscreen": "f",
 		"mute": "m",
-		"captions": "alt+r",
-		"increasespeed": "]",
-		"decreasespeed": "[",
+		"captions": ["alt", "r"],
+		"increasespeed": "bracketright",
+		"decreasespeed": "bracketleft",
 	},
 	"custom": {
 		"pause": "enter",
@@ -129,17 +129,15 @@ SHORTCUTS_BY_MODE = {
 }
 
 currentMode = None
-processSetBeforeCustom = None
+createdProcesses = []
 
 def clear(clearCurrentMode = True):
 	global currentMode
-	if currentMode == 'custom':
-		for x in moreos.get_process_name_set().difference(processSetBeforeCustom):
-			moreos.kill_processes_with_name(x)
-	moreos.kill_processes_with_name(VIDEO_PLAYER_PROCESS_NAME)
-	moreos.kill_processes_with_name(FREETUBE_PROCESS_NAME)
-	moreos.kill_processes_with_name(CHROME_PROCESS_NAME)
-	moreos.kill_processes_with_name(FIREFOX_PROCESS_NAME)
+	global createdProcesses
+
+	for p in createdProcesses:
+		p.kill()
+	createdProcesses = []
 	if clearCurrentMode:
 		currentMode = None
 
@@ -155,6 +153,7 @@ def download_torrent_thread(magnet):
 
 def open_link_thread(link):
 	global currentMode
+	global createdProcesses
 	birthday_reminder.remind()
 	if "youtu" in link:
 		if YOUTUBE_MODE == "freetube":
@@ -198,6 +197,7 @@ def open_link_thread(link):
 				freetube_handler.update_if_needed()
 			clear(False)
 			process = subprocess.Popen(launchCommand + [link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			createdProcesses.append(process)
 			time.sleep(openTime + loadTime)
 			if currentMode is not None: # it's possible that the user closed it already
 				inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
@@ -206,11 +206,13 @@ def open_link_thread(link):
 	elif "twitch" in link:
 		clear()
 		currentMode = 'vlc'
-		subprocess.run([sys.executable,  "-m", "streamlink", "--twitch-low-latency", link, "720p,480p,best", "--player-args", "--fullscreen"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		process = subprocess.Popen([sys.executable,  "-m", "streamlink", "--twitch-low-latency", link, "720p,480p,best", "--player-args", "--fullscreen"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		createdProcesses.append(process)
 
 def open_file_thread(filePath):
 	print(f"opening path {filePath}")
 	global currentMode
+	global createdProcesses
 	birthday_reminder.remind()
 	clear()
 	currentMode = 'vlc'
@@ -219,10 +221,12 @@ def open_file_thread(filePath):
 	os.utime(filePath, (stamp, stamp))
 	print(VIDEO_PLAYER_LAUNCH_COMMAND + [filePath])
 	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [common.fixPathOS(filePath)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	createdProcesses.append(process)
 # 	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [f"--sub-autodetect-path={os.path.dirname(filePath)}", filePath])
 
 def open_spotify_thread():
 	global currentMode
+	global createdProcesses
 	birthday_reminder.remind()
 	clear()
 	currentMode = 'spotify'
@@ -230,6 +234,7 @@ def open_spotify_thread():
 	for k in SPOTIFY_ENVIRONMENT.keys():
 		spotifyEnv[k] = SPOTIFY_ENVIRONMENT[k]
 	process = subprocess.Popen(SPOTIFY_LAUNCH_COMMAND, env=spotifyEnv)
+	createdProcesses.append(process)
 
 
 @app.route('/')
@@ -323,7 +328,7 @@ def custom_endpoint():
 def customrun_endpoint():
 	birthday_reminder.remind()
 	clear()
-	global processSetBeforeCustom
+	global createdProcesses
 	global currentMode
 	name = flask.request.args.get('name')
 	if not os.path.isfile(CUSTOM_FILE_PATH):
@@ -332,8 +337,8 @@ def customrun_endpoint():
 		jsonObject = json.loads(file.read())
 	if name not in jsonObject.keys():
 		return "", 400
-	processSetBeforeCustom = moreos.get_process_name_set()
-	subprocess.Popen(jsonObject[name], shell=True)
+	process = subprocess.Popen(jsonObject[name], shell=True)
+	createdProcesses.append(process)
 	currentMode = 'custom'
 	return "", 200
 
