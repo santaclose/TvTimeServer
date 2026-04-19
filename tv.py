@@ -298,6 +298,17 @@ def file_endpoint():
 		output.extend([('f', x, common.fileDaysSinceLastAccess(x)) for x in common.sortedNicely(common.filesInFolder(path)) if common.fileIsVideoFile(x)])
 		return json.dumps(output, indent=INDENT_JSON_RESPONSES)
 
+def custom_object_for_client(customObject):
+	clientObject = []
+	for k in customObject.keys():
+		if isinstance(customObject[k], dict):
+			if 'cmd' in customObject[k].keys():
+				clientObject.append(k)
+			else:
+				clientObject.append({k: custom_object_for_client(customObject[k])})
+		else:
+			clientObject.append(k)
+	return clientObject
 
 @app.route('/custom/', methods=['GET', 'POST', 'DELETE'])
 def custom_endpoint():
@@ -305,7 +316,7 @@ def custom_endpoint():
 		if not os.path.isfile(CUSTOM_FILE_PATH):
 			return json.dumps([]), 200
 		with open(CUSTOM_FILE_PATH, 'r') as file:
-			return json.dumps([x for x in json.loads(file.read())]), 200
+			return json.dumps(custom_object_for_client(json.loads(file.read()))), 200
 	elif flask.request.method == 'POST':
 		if "command" not in flask.request.json.keys() or "name" not in flask.request.json.keys():
 			return "", 400
@@ -340,14 +351,20 @@ def customrun_endpoint():
 	clear()
 	global createdProcesses
 	global currentMode
-	name = flask.request.args.get('name')
+	path = flask.request.args.get('path')
 	if not os.path.isfile(CUSTOM_FILE_PATH):
 		return "", 400
 	with open(CUSTOM_FILE_PATH, 'r') as file:
 		jsonObject = json.loads(file.read())
-	if name not in jsonObject.keys():
-		return "", 400
-	process = subprocess.Popen(jsonObject[name], shell=True)
+	pathItems = path.split('/')
+	for pathItem in pathItems:
+		if pathItem not in jsonObject.keys():
+			return "", 400
+		jsonObject = jsonObject[pathItem]
+	if isinstance(jsonObject, str):
+		process = subprocess.Popen(jsonObject, shell=True)
+	elif isinstance(jsonObject, dict):
+		process = subprocess.Popen(jsonObject["cmd"], cwd=jsonObject["cwd"], shell=True)
 	createdProcesses.append(process)
 	currentMode = 'custom'
 	return "", 200
