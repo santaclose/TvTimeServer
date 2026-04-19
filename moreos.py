@@ -22,13 +22,13 @@ def switch_display():
 				subprocess.run(f"hyprctl keyword monitor {allMonitors[nextMonitorIndex]},enable", shell=True)
 
 def kill_process_with_pid(pid):
-	os.kill(pid, signal.SIGTERM)
+	os.kill(pid, signal.SIGKILL)
 
 def kill_process_group(pid):
 	children = psutil.Process(pid).children(recursive=True)
 	for child in children:
-		child.kill()
-	os.kill(pid, signal.SIGTERM)
+		os.kill(child.pid, signal.SIGKILL)
+	os.kill(pid, signal.SIGKILL)
 	return len(children)
 
 def is_process_running(process_name):
