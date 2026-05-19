@@ -36,3 +36,12 @@ def setClipText(text):
 	pyperclip.copy(text)
 def getClipText():
 	return pyperclip.paste()
+
+def simulate(actionList):
+	typePrefix = "type:"
+	for action in actionList:
+		if isinstance(action, str) and action.startswith(typePrefix):
+			keyWrite(action[len(typePrefix):])
+		else:
+			keyPress(action)
+		time.sleep(0.17)

@@ -6,3 +6,4 @@ flask
 plyer
 waitress
 pyperclip
+selenium

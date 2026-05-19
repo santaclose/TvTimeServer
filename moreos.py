@@ -6,6 +6,11 @@ import subprocess
 
 currentDisplayIsExternal = True
 
+def fix_path(path):
+	if os.name == 'nt':
+		return path.replace('/', '\\')
+	return path
+
 def switch_display():
 	if os.name == 'nt':
 		global currentDisplayIsExternal

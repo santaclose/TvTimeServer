@@ -11,10 +11,6 @@ def fileIsSubtitleFile(filePath):
 	return any([filePath.endswith(x) for x in SUBTITLE_FILE_EXTENSIONS])
 def fileDaysSinceLastAccess(filePath):
 	return (time.time() - os.stat(filePath).st_atime) / 3600 / 24
-def fixPathOS(path):
-	if os.name == 'nt':
-		return path.replace('/', '\\')
-	return path
 
 def filesInFolderRec(folder):
 	return [os.path.join(dp, f).replace('\\', '/') for dp, dn, filenames in os.walk(folder) for f in filenames]

@@ -1,245 +1,33 @@
-import subprocess
-import pyperclip
-import threading
-import flask
-import time
-import json
-import sys
-import os
-import re
-BASE_PATH = os.path.dirname(__file__)
-
-import investments
-import birthday_reminder
-import freetube_handler
-if os.name == "nt":
-	import inputsym_win as inputsym
-else:
-	import inputsym
 import common
 import moreos
 
-app = flask.Flask(__name__)
+import youtube_firefox
+import twitch_vlc
+import file_vlc
 
+import subprocess
+import threading
+import json
+import sys
+import os
+
+import flask
+
+BASE_PATH = os.path.dirname(__file__)
 VIDEO_FOLDER = f"{BASE_PATH}/downloads"
-if not os.path.exists(VIDEO_FOLDER):
-	os.makedirs(VIDEO_FOLDER)
-VIDEO_FILE_EXTENSIONS = [".mkv", ".webm", ".flv", ".vob", ".ogg", ".ogv", ".drc", ".mng", ".avi", ".mov", ".qt", ".wmv", ".yuv", ".rm", ".rmvb", ".asf", ".amv", ".mp4", ".m4v", ".mp", ".svi", ".3gp", ".flv", ".f4v"]
-VIDEO_PLAYER_PROCESS_NAME = "vlc"
-VIDEO_PLAYER_LAUNCH_COMMAND = ["vlc", "--fullscreen", "--sub-autodetect-fuzzy=1"]
-
-if os.name == "nt":
-	YOUTUBE_MODE = "chrome"
-else:
-	YOUTUBE_MODE = "firefox"
-FREETUBE_PROCESS_NAME = "freetube"
-FREETUBE_LAUNCH_COMMAND = [freetube_handler.get_command()]
-FREETUBE_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
-FREETUBE_OPEN_WAIT_TIME = 5
-FREETUBE_WEBSITE_LOAD_WAIT_TIME = 11
-CHROME_PROCESS_NAME = "chrome"
-if os.name == "nt":
-	CHROME_LAUNCH_COMMAND = ["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
-else:
-	CHROME_LAUNCH_COMMAND = ["google-chrome-stable", "--disable-session-crashed-bubble", "--hide-crash-restore-bubble", "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"]
-CHROME_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
-CHROME_OPEN_WAIT_TIME = 5
-CHROME_WEBSITE_LOAD_WAIT_TIME = 4
-FIREFOX_PROCESS_NAME = "firefox"
-FIREFOX_LAUNCH_COMMAND = ["firefox"]
-FIREFOX_GO_TO_BAR_SHORTCUT = ["ctrl", "l"]
-FIREFOX_OPEN_WAIT_TIME = 5
-FIREFOX_WEBSITE_LOAD_WAIT_TIME = 4
-
 CUSTOM_FILE_PATH = f"{BASE_PATH}/custom_commands.json"
-
 INDENT_JSON_RESPONSES='\t'
 
-SHORTCUTS_BY_MODE = {
-	"vlc": {
-		"pause": "space",
-		"forward": "right",
-		"rewind": "left",
-		"volumeup": "up",
-		"volumedown": "down",
-		"fullscreen": "f",
-		"mute": "m",
-		"captions": "v",
-		"increasespeed": "bracketright",
-		"decreasespeed": "bracketleft",
-	},
-	"youtube-freetube": {
-		"pause": "space",
-		"forward": "right",
-		"rewind": "left",
-		"volumeup": "up",
-		"volumedown": "down",
-		"fullscreen": "f",
-		"mute": "m",
-		"captions": "c",
-		"increasespeed": "p",
-		"decreasespeed": "o",
-	},
-	"youtube-chrome": {
-		"pause": "k",
-		"forward": "right",
-		"rewind": "left",
-		"volumeup": "up",
-		"volumedown": "down",
-		"fullscreen": "f",
-		"mute": "m",
-		"captions": "c",
-		"increasespeed": ["shift", "period"],
-		"decreasespeed": ["shift", "comma"]
-	},
-	"youtube-firefox": {
-		"pause": "k",
-		"forward": "right",
-		"rewind": "left",
-		"volumeup": "up",
-		"volumedown": "down",
-		"fullscreen": "f",
-		"mute": "m",
-		"captions": "c",
-		"increasespeed": ["shift", "period"],
-		"decreasespeed": ["shift", "comma"]
-	},
-	"twitch": {
-		"pause": "space",
-		"forward": "right",
-		"rewind": "left",
-		"volumeup": "up",
-		"volumedown": "down",
-		"fullscreen": "f",
-		"mute": "m",
-		"captions": ["alt", "r"],
-		"increasespeed": "bracketright",
-		"decreasespeed": "bracketleft",
-	},
-	"custom": {
-		"pause": "enter",
-		"forward": "right",
-		"rewind": "left",
-		"volumeup": "up",
-		"volumedown": "down",
-		"mute": "esc",
-		"captions": "space",
-		"increasespeed": "tab",
-	}
-}
-
 currentMode = None
-createdProcesses = []
+customProcess = None
 
-def clear(clearCurrentMode = True):
-	global currentMode
-	global createdProcesses
-
-	for p in createdProcesses:
-		moreos.kill_process_group(p.pid)
-	createdProcesses = []
-	if clearCurrentMode:
-		currentMode = None
-
-def download_torrent_thread(magnet):
-	os.chdir(VIDEO_FOLDER)
-	try:
-		# print(f"Calling python3 download_torrent.py {magnet}")
-		subprocess.check_call([sys.executable, f"{BASE_PATH}/download_torrent.py", magnet, VIDEO_FOLDER])
-		print(f"Torrent download succeeded")
-	except:
-		print(f"Torrent download failed for torrent {magnet}")
-	os.chdir(BASE_PATH)
-
-def open_link_thread(link):
-	global currentMode
-	global createdProcesses
-	birthday_reminder.remind()
-	if "youtu" in link:
-		if YOUTUBE_MODE == "freetube":
-			currentMode = 'youtube-freetube'
-			processName = FREETUBE_PROCESS_NAME
-			goToBarShortcut = FREETUBE_GO_TO_BAR_SHORTCUT
-			loadTime = FREETUBE_WEBSITE_LOAD_WAIT_TIME
-			openTime = FREETUBE_OPEN_WAIT_TIME
-			launchCommand = FREETUBE_LAUNCH_COMMAND
-		elif YOUTUBE_MODE == "chrome":
-			currentMode = 'youtube-chrome'
-			processName = CHROME_PROCESS_NAME
-			goToBarShortcut = CHROME_GO_TO_BAR_SHORTCUT
-			loadTime = CHROME_WEBSITE_LOAD_WAIT_TIME
-			openTime = CHROME_OPEN_WAIT_TIME
-			launchCommand = CHROME_LAUNCH_COMMAND
-		elif YOUTUBE_MODE == "firefox":
-			currentMode = 'youtube-firefox'
-			processName = FIREFOX_PROCESS_NAME
-			goToBarShortcut = FIREFOX_GO_TO_BAR_SHORTCUT
-			loadTime = FIREFOX_WEBSITE_LOAD_WAIT_TIME
-			openTime = FIREFOX_OPEN_WAIT_TIME
-			launchCommand = FIREFOX_LAUNCH_COMMAND
-
-		if moreos.is_process_running(processName): # reuse process if possible
-			inputsym.keyPress("escape")
-			time.sleep(0.1)
-			inputsym.keyPress(goToBarShortcut)
-			time.sleep(0.1)
-			inputsym.keyPress(["ctrl", "a"])
-			time.sleep(0.15)
-			inputsym.keyPress("delete")
-			time.sleep(0.15)
-			inputsym.keyWrite(link)
-			inputsym.keyPress("return")
-			time.sleep(loadTime)
-			if currentMode is not None: # it's possible that the user closed it already
-				inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
-		else:
-			if YOUTUBE_MODE == "freetube":
-				freetube_handler.update_if_needed()
-			clear(False)
-			process = subprocess.Popen(launchCommand + [link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-			createdProcesses.append(process)
-			time.sleep(openTime + loadTime)
-			if currentMode is not None: # it's possible that the user closed it already
-				inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
-			# open_link_thread(link)
-
-	elif "twitch" in link:
-		clear()
-		currentMode = 'vlc'
-		process = subprocess.Popen([sys.executable,  "-m", "streamlink", "--twitch-low-latency", link, "720p,480p,best", "--player-args", "--fullscreen"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-		createdProcesses.append(process)
-
-def open_file_thread(filePath):
-	print(f"opening path {filePath}")
-	global currentMode
-	global createdProcesses
-	birthday_reminder.remind()
-	clear()
-	currentMode = 'vlc'
-	print(f"--sub-autodetect-path={os.path.dirname(filePath)}")
-	stamp = time.time()
-	os.utime(filePath, (stamp, stamp))
-	print(VIDEO_PLAYER_LAUNCH_COMMAND + [filePath])
-	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [common.fixPathOS(filePath)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-	createdProcesses.append(process)
-# 	process = subprocess.Popen(VIDEO_PLAYER_LAUNCH_COMMAND + [f"--sub-autodetect-path={os.path.dirname(filePath)}", filePath])
-
-def open_spotify_thread():
-	global currentMode
-	global createdProcesses
-	birthday_reminder.remind()
-	clear()
-	currentMode = 'spotify'
-	spotifyEnv = os.environ.copy()
-	for k in SPOTIFY_ENVIRONMENT.keys():
-		spotifyEnv[k] = SPOTIFY_ENVIRONMENT[k]
-	process = subprocess.Popen(SPOTIFY_LAUNCH_COMMAND, env=spotifyEnv)
-	createdProcesses.append(process)
+app = flask.Flask(__name__)
 
 
 @app.route('/')
 def index():
 	return 'tv time', 200
+
 
 @app.route('/update/')
 def update_endpoint():
@@ -250,25 +38,31 @@ def update_endpoint():
 	except Exception as error:
 		print("git pull command failed")
 	try:
-		if os.name == "nt":
-			command = [sys.executable, '-m', 'pip', 'install', '-r', 'requirements_win.txt']
-		else:
-			command = ["uv", "pip", "install", "-r", "requirements.txt", "--python", "3.11.1"]
+		command = ["uv", "pip", "install", "-r", "requirements.txt", "--python", "3.11.1"]
 		print(f"running: {' '.join(command)}")
 		print(subprocess.check_output(command).decode('utf-8'))
 	except Exception as error:
 		print("pip install command failed")
-	if os.name == "nt":
-		subprocess.Popen([sys.executable, 'tv.py'])
-	else:
-		subprocess.Popen(["bash", "run.bash"])
+	subprocess.Popen(["bash", "run.bash"])
 	moreos.kill_process_with_pid(os.getpid())
 	return "", 200
+
 
 @app.route('/switch_display')
 def switch_display():
 	moreos.switch_display()
 	return "", 200
+
+
+def download_torrent_thread(magnet):
+	os.chdir(VIDEO_FOLDER)
+	try:
+		# print(f"Calling python3 download_torrent.py {magnet}")
+		subprocess.check_call([sys.executable, f"{BASE_PATH}/download_torrent.py", magnet, VIDEO_FOLDER])
+		print(f"Torrent download succeeded")
+	except Exception as e:
+		print(f"Torrent download failed: {e}\nMagnet was: {magnet}")
+	os.chdir(BASE_PATH)
 
 @app.route('/download/torrent/')
 def download_torrent_endpoint():
@@ -277,12 +71,34 @@ def download_torrent_endpoint():
 	x.start()
 	return "", 200
 
+
+def open_link_thread(link):
+	global currentMode
+	if "youtu" in link:
+		wantedMode = "youtube_firefox"
+	elif "twitch" in link:
+		wantedMode = "twitch_vlc"
+	if currentMode is not None and wantedMode != currentMode:
+		exec(f"{currentMode}.terminate()")
+	currentMode = wantedMode
+	exec(f"{currentMode}.launch('{link}')")
+
 @app.route('/link/')
 def link_endpoint():
 	link = flask.request.args.get('url')
 	x = threading.Thread(target=open_link_thread, args=(link,))
 	x.start()
 	return "", 200
+
+
+def open_file_thread(file_path):
+	global currentMode
+	wantedMode = "file_vlc"
+	if currentMode is not None and wantedMode != currentMode:
+		exec(f"{currentMode}.terminate()")
+	currentMode = wantedMode
+	exec(f"{currentMode}.launch('{file_path}')")
+
 
 @app.route('/file/', methods=['POST'])
 def file_endpoint():
@@ -297,6 +113,7 @@ def file_endpoint():
 		output = [('d', x, common.fileDaysSinceLastAccess(x)) for x in common.sortedNicely(common.foldersInFolder(path))]
 		output.extend([('f', x, common.fileDaysSinceLastAccess(x)) for x in common.sortedNicely(common.filesInFolder(path)) if common.fileIsVideoFile(x)])
 		return json.dumps(output, indent=INDENT_JSON_RESPONSES)
+
 
 def custom_object_for_client(customObject):
 	clientObject = []
@@ -345,12 +162,11 @@ def custom_endpoint():
 			file.write(json.dumps(jsonObject, indent='\t'))
 		return "", 200
 
+
 @app.route('/customrun/')
 def customrun_endpoint():
-	birthday_reminder.remind()
-	clear()
-	global createdProcesses
 	global currentMode
+	global customProcess
 	path = flask.request.args.get('path')
 	if not os.path.isfile(CUSTOM_FILE_PATH):
 		return "", 400
@@ -361,21 +177,28 @@ def customrun_endpoint():
 		if pathItem not in jsonObject.keys():
 			return "", 400
 		jsonObject = jsonObject[pathItem]
+	if customProcess is not None:
+		moreos.kill_process_group(customProcess.pid)
 	if isinstance(jsonObject, str):
-		process = subprocess.Popen(jsonObject, shell=True)
+		customProcess = subprocess.Popen(jsonObject, shell=True)
 	elif isinstance(jsonObject, dict):
-		process = subprocess.Popen(jsonObject["cmd"], cwd=jsonObject["cwd"], shell=True)
-	createdProcesses.append(process)
+		customProcess = subprocess.Popen(jsonObject["cmd"], cwd=jsonObject["cwd"], shell=True)
 	currentMode = 'custom'
 	return "", 200
 
+
 @app.route('/clear/')
 def clear_endpoint():
+	global currentMode
+	global customProcess
 	if currentMode is None:
 		return "", 400
-	clear()
-	x = threading.Thread(target=investments.query)
-	x.start()
+	if currentMode == 'custom':
+		moreos.kill_process_group(customProcess.pid)
+		customProcess = None
+	else:
+		exec(f"{currentMode}.terminate()")
+	currentMode = None
 	return "", 200
 
 
@@ -383,71 +206,82 @@ def clear_endpoint():
 def pause_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["pause"])
+	exec(f"{currentMode}.control_key('pause')")
 	return "", 200
+
 
 @app.route('/forward/')
 def forward_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["forward"])
+	exec(f"{currentMode}.control_key('forward')")
 	return "", 200
+
 
 @app.route('/rewind/')
-def back_endpoint():
+def rewind_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["rewind"])
+	exec(f"{currentMode}.control_key('rewind')")
 	return "", 200
+
 
 @app.route('/volumeup/')
-def volume_up_endpoint():
+def volumeup_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["volumeup"])
+	exec(f"{currentMode}.control_key('volumeup')")
 	return "", 200
 
+
 @app.route('/volumedown/')
-def volume_down_endpoint():
+def volumedown_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["volumedown"])
+	exec(f"{currentMode}.control_key('volumedown')")
 	return "", 200
+
 
 @app.route('/fullscreen/')
 def fullscreen_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["fullscreen"])
+	exec(f"{currentMode}.control_key('fullscreen')")
 	return "", 200
+
 
 @app.route('/mute/')
 def mute_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["mute"])
+	exec(f"{currentMode}.control_key('mute')")
 	return "", 200
+
 
 @app.route('/captions/')
 def captions_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["captions"])
+	exec(f"{currentMode}.control_key('captions')")
 	return "", 200
+
 
 @app.route('/increasespeed/')
 def increasespeed_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["increasespeed"])
+	exec(f"{currentMode}.control_key('increasespeed')")
 	return "", 200
+
 
 @app.route('/decreasespeed/')
 def decreasespeed_endpoint():
 	if currentMode is None:
 		return "", 400
-	inputsym.keyPress(SHORTCUTS_BY_MODE[currentMode]["decreasespeed"])
+	exec(f"{currentMode}.control_key('decreasespeed')")
 	return "", 200
+
+
 
 # app.run(host='0.0.0.0', port=8081)
 if __name__ == "__main__":
