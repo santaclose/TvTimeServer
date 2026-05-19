@@ -1,8 +1,10 @@
 import os
+import re
 import signal
 import psutil
 import plyer
 import subprocess
+from pathlib import Path
 
 currentDisplayIsExternal = True
 
@@ -19,12 +21,23 @@ def switch_display():
 	else:
 		selectedMonitor = subprocess.check_output("hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name'", shell=True).decode('utf-8').strip()
 		allMonitors = subprocess.check_output("hyprctl monitors all -j | jq -r '.[] | .name'", shell=True).decode('utf-8').strip().split('\n')
+
+		hyprlandConfigPath = Path("~/.config/hypr/hyprland.lua").expanduser()
+		hyprlandConfigLines = hyprlandConfigPath.read_text(encoding="utf-8").splitlines()
+		hyprlandConfigLinesWithMonitor = dict()
+		for i, line in enumerate(hyprlandConfigLines):
+			m = re.match(r'hl\.monitor\(\{\s*output\s*=\s*"([^"]+)"', line)
+			if m is not None:
+				hyprlandConfigLinesWithMonitor[m.group(1)] = i
+
 		for i in range(len(allMonitors)):
 			monitor = allMonitors[i]
 			if selectedMonitor == monitor:
 				nextMonitorIndex = (i + 1) % len(allMonitors)
-				subprocess.run(f"hyprctl keyword monitor {monitor},disable", shell=True)
-				subprocess.run(f"hyprctl keyword monitor {allMonitors[nextMonitorIndex]},enable", shell=True)
+				hyprlandConfigLines[hyprlandConfigLinesWithMonitor[monitor]] = hyprlandConfigLines[hyprlandConfigLinesWithMonitor[monitor]].replace("true", "true").replace("false", "true")
+				hyprlandConfigLines[hyprlandConfigLinesWithMonitor[allMonitors[nextMonitorIndex]]] = hyprlandConfigLines[hyprlandConfigLinesWithMonitor[allMonitors[nextMonitorIndex]]].replace("true", "false").replace("false", "false")
+		hyprlandConfigPath.write_text("\n".join(hyprlandConfigLines), encoding="utf-8")
+		subprocess.run("hyprctl reload", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def kill_process_with_pid(pid):
 	os.kill(pid, signal.SIGKILL)
