@@ -204,7 +204,7 @@ def clear_endpoint():
 
 @app.route('/pause/')
 def pause_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('pause')")
 	return "", 200
@@ -212,7 +212,7 @@ def pause_endpoint():
 
 @app.route('/forward/')
 def forward_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('forward')")
 	return "", 200
@@ -220,7 +220,7 @@ def forward_endpoint():
 
 @app.route('/rewind/')
 def rewind_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('rewind')")
 	return "", 200
@@ -228,7 +228,7 @@ def rewind_endpoint():
 
 @app.route('/volumeup/')
 def volumeup_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('volumeup')")
 	return "", 200
@@ -236,7 +236,7 @@ def volumeup_endpoint():
 
 @app.route('/volumedown/')
 def volumedown_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('volumedown')")
 	return "", 200
@@ -244,7 +244,7 @@ def volumedown_endpoint():
 
 @app.route('/fullscreen/')
 def fullscreen_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('fullscreen')")
 	return "", 200
@@ -252,7 +252,7 @@ def fullscreen_endpoint():
 
 @app.route('/mute/')
 def mute_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('mute')")
 	return "", 200
@@ -260,7 +260,7 @@ def mute_endpoint():
 
 @app.route('/captions/')
 def captions_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('captions')")
 	return "", 200
@@ -268,7 +268,7 @@ def captions_endpoint():
 
 @app.route('/increasespeed/')
 def increasespeed_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('increasespeed')")
 	return "", 200
@@ -276,7 +276,7 @@ def increasespeed_endpoint():
 
 @app.route('/decreasespeed/')
 def decreasespeed_endpoint():
-	if currentMode is None:
+	if currentMode is None or currentMode == "custom":
 		return "", 400
 	exec(f"{currentMode}.control_key('decreasespeed')")
 	return "", 200
