@@ -19,6 +19,9 @@ def get_default_profile():
 	firefox_dir = Path.home() / ".mozilla" / "firefox"
 	for profile in firefox_dir.glob("*.default-release"):
 		return profile
+	firefox_dir = Path.home() / ".config" / "mozilla" / "firefox"
+	for profile in firefox_dir.glob("*.default-release"):
+		return profile
 	raise FileNotFoundError("No Firefox default-release profile found")
 
 def wait_until_load():
