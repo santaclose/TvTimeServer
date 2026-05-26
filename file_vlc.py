@@ -1,10 +1,11 @@
 import os
+desktop = os.environ.get("XDG_CURRENT_DESKTOP", "Unknown")
 import sys
 import subprocess
 
 import moreos
-if os.name == "nt":
-	import inputsym_win as inputsym
+if desktop == "Hyprland":
+	import inputsym_hypr as inputsym
 else:
 	import inputsym
 

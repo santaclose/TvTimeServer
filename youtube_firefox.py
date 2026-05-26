@@ -1,4 +1,5 @@
 import os
+desktop = os.environ.get("XDG_CURRENT_DESKTOP", "Unknown")
 import time
 from pathlib import Path
 from selenium import webdriver
@@ -8,8 +9,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
 from selenium.common.exceptions import WebDriverException
 
-if os.name == "nt":
-	import inputsym_win as inputsym
+if desktop == "Hyprland":
+	import inputsym_hypr as inputsym
 else:
 	import inputsym
 

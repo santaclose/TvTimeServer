@@ -1,25 +1,37 @@
 import time
+import pynput
+import pyautogui
 import pyperclip
-import subprocess
 
+KEY_INTERVAL = 0.015
+pkb = pynput.keyboard.Controller()
+
+def getKey(key):
+	if len(key) == 1:
+		return f'"{key}"'
+	return f"pynput.keyboard.Key.{key}"
+def keyDown(key):
+	time.sleep(KEY_INTERVAL)
+	exec(f"pkb.press({getKey(key)})", globals(), locals())
+def keyUp(key):
+	time.sleep(KEY_INTERVAL)
+	exec(f"pkb.release({getKey(key)})", globals(), locals())
+def keyCombo(keys):
+	for key in keys:
+		time.sleep(KEY_INTERVAL)
+		exec(f"pkb.press({getKey(key)})", globals(), locals())
+	for key in reversed(keys):
+		time.sleep(KEY_INTERVAL)
+		exec(f"pkb.release({getKey(key)})", globals(), locals())
 def keyPress(key):
 	if isinstance(key, list):
-		lua_args = f'hl.dsp.send_shortcut({{ mods = "{key[0]}", key = "{key[1]}", window = "activewindow" }})'
-	else:
-		lua_args = f'hl.dsp.send_shortcut({{ key = "{key}", window = "activewindow" }})'
-	command = ["hyprctl", "dispatch", lua_args]
-	subprocess.run(command, stdout=subprocess.DEVNULL)
-
+		keyCombo(key)
+		return
+	time.sleep(KEY_INTERVAL)
+	exec(f"pkb.press({getKey(key)})", globals(), locals())
+	exec(f"pkb.release({getKey(key)})", globals(), locals())
 def keyWrite(text):
-	temp = getClipText()
-	setClipText(text)
-	time.sleep(0.1)
-	lua_args = 'hl.dsp.send_shortcut({ mods = "CONTROL", key = "V", window = "activewindow" })'
-	command = ["hyprctl", "dispatch", lua_args]
-	subprocess.run(command, stdout=subprocess.DEVNULL)
-	time.sleep(0.1)
-	setClipText(temp)
-
+	pyautogui.write(text)
 def setClipText(text):
 	pyperclip.copy(text)
 def getClipText():
