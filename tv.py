@@ -4,6 +4,7 @@ import moreos
 import youtube_firefox
 import twitch_vlc
 import file_vlc
+import custom
 
 import subprocess
 import threading
@@ -20,7 +21,6 @@ CUSTOM_FILE_PATH = f"{BASE_PATH}/custom_commands.json"
 INDENT_JSON_RESPONSES='\t'
 
 currentMode = None
-customProcess = None
 
 app = flask.Flask(__name__)
 
@@ -167,7 +167,6 @@ def custom_endpoint():
 @app.route('/customrun/')
 def customrun_endpoint():
 	global currentMode
-	global customProcess
 	path = flask.request.args.get('path')
 	if not os.path.isfile(CUSTOM_FILE_PATH):
 		return "", 400
@@ -178,27 +177,21 @@ def customrun_endpoint():
 		if pathItem not in jsonObject.keys():
 			return "", 400
 		jsonObject = jsonObject[pathItem]
-	if customProcess is not None:
-		moreos.kill_process_group(customProcess.pid)
-	if isinstance(jsonObject, str):
-		customProcess = subprocess.Popen(jsonObject, shell=True)
-	elif isinstance(jsonObject, dict):
-		customProcess = subprocess.Popen(jsonObject["cmd"], cwd=jsonObject["cwd"], shell=True)
-	currentMode = 'custom'
+
+	wantedMode = "custom"
+	if currentMode is not None and wantedMode != currentMode:
+		exec(f"{currentMode}.terminate()")
+	currentMode = wantedMode
+	exec(f"{currentMode}.launch({repr(jsonObject)})")
 	return "", 200
 
 
 @app.route('/clear/')
 def clear_endpoint():
 	global currentMode
-	global customProcess
 	if currentMode is None:
 		return "", 400
-	if currentMode == 'custom':
-		moreos.kill_process_group(customProcess.pid)
-		customProcess = None
-	else:
-		exec(f"{currentMode}.terminate()")
+	exec(f"{currentMode}.terminate()")
 	currentMode = None
 	return "", 200
 
