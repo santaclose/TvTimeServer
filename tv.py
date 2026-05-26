@@ -15,6 +15,7 @@ import flask
 
 BASE_PATH = os.path.dirname(__file__)
 VIDEO_FOLDER = f"{BASE_PATH}/downloads"
+os.makedirs(VIDEO_FOLDER, exist_ok=True)
 CUSTOM_FILE_PATH = f"{BASE_PATH}/custom_commands.json"
 INDENT_JSON_RESPONSES='\t'
 
