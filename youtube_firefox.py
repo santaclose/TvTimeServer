@@ -40,7 +40,7 @@ def is_running():
 def launch(link):
 	global seleniumDriver
 	if is_running():
-		inputsym.simulate(["escape", ["ctrl", "l"], ["ctrl", "a"], "delete", f"type:{link}", "return"])
+		inputsym.simulate(["escape", ["ctrl", "l"], ["ctrl", "a"], f"type:{link}", "return"])
 		wait_until_load()
 		control_key('fullscreen')
 	else:

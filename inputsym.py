@@ -6,7 +6,16 @@ import pyperclip
 KEY_INTERVAL = 0.015
 pkb = pynput.keyboard.Controller()
 
+key_mapping = {
+	"return": "enter",
+	"escape": "esc",
+	"comma": ",",
+	"period": "."
+}
+
 def getKey(key):
+	if key in key_mapping.keys():
+		key = key_mapping[key]
 	if len(key) == 1:
 		return f'"{key}"'
 	return f"pynput.keyboard.Key.{key}"
