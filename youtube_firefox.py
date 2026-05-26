@@ -27,11 +27,10 @@ def get_default_profile():
 
 def wait_until_load():
 	global seleniumDriver
-	time.sleep(1.0)
+	time.sleep(4.0)
 	element = WebDriverWait(seleniumDriver, 20).until(
-		EC.presence_of_element_located((By.ID, "movie_player"))
+		EC.visibility_of_element_located((By.ID, "movie_player"))
 	)
-	time.sleep(1.0)
 
 def is_running():
 	global seleniumDriver
