@@ -1,64 +1,42 @@
 import os
 desktop = os.environ.get("XDG_CURRENT_DESKTOP", "Unknown")
 import time
-from pathlib import Path
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options
-from selenium.common.exceptions import WebDriverException
+import moreos
+import subprocess
 
 if desktop == "Hyprland":
 	import inputsym_hypr as inputsym
 else:
 	import inputsym
 
-seleniumDriver = None
-
-def get_default_profile():
-	firefox_dir = Path.home() / ".mozilla" / "firefox"
-	for profile in firefox_dir.glob("*.default-release"):
-		return profile
-	firefox_dir = Path.home() / ".config" / "mozilla" / "firefox"
-	for profile in firefox_dir.glob("*.default-release"):
-		return profile
-	raise FileNotFoundError("No Firefox default-release profile found")
+process = None
+LOADING_TIME = 5.0
+LAUNCH_TIME = 5.0
 
 def wait_until_load():
-	global seleniumDriver
-	time.sleep(4.0)
-	element = WebDriverWait(seleniumDriver, 20).until(
-		EC.visibility_of_element_located((By.ID, "movie_player"))
-	)
+	time.sleep(LOADING_TIME)
 
 def is_running():
-	global seleniumDriver
-	return seleniumDriver is not None
+	global process
+	return process is not None
 
 def launch(link):
-	global seleniumDriver
+	global process
 	if is_running():
 		inputsym.simulate(["escape", ["ctrl", "l"], ["ctrl", "a"], f"type:{link}", "return"])
 		wait_until_load()
 		control_key('fullscreen')
 	else:
-		options = Options()
-		profile_path = get_default_profile()
-		options.add_argument(f"--profile={profile_path}")
-		seleniumDriver = webdriver.Firefox(options=options)
-		try:
-			seleniumDriver.get(link)
-			wait_until_load()
-			control_key('fullscreen')
-		except Exception as e:
-			print(f"Selenium error: {e}")
+		process = subprocess.Popen(["firefox", link])
+		time.sleep(LAUNCH_TIME)
+		wait_until_load()
+		control_key('fullscreen')
 
 def terminate():
-	global seleniumDriver
+	global process
 	if is_running():
-		seleniumDriver.quit()
-	seleniumDriver = None
+		moreos.kill_process_group(process.pid)
+	process = None
 
 controlKeys = {
 	"pause": "k",
