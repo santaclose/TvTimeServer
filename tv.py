@@ -62,6 +62,28 @@ def switch_display():
 	return "", 200
 
 
+@app.route('/mouse/move/')
+def mouse_move_endpoint():
+	import mouse_hypr
+	try:
+		dx = int(flask.request.args.get('dx', 0))
+		dy = int(flask.request.args.get('dy', 0))
+	except ValueError:
+		return "", 400
+	mouse_hypr.move(dx, dy)
+	return "", 200
+
+
+@app.route('/mouse/click/')
+def mouse_click_endpoint():
+	import mouse_hypr
+	button = flask.request.args.get('button', 'left')
+	if button not in mouse_hypr.BUTTONS:
+		return "", 400
+	mouse_hypr.click(button)
+	return "", 200
+
+
 def download_torrent_thread(magnet):
 	os.chdir(VIDEO_FOLDER)
 	try:
